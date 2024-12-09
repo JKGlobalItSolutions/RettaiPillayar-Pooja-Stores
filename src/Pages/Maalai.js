@@ -100,6 +100,40 @@ const StyledMaalai = styled.div`
       right: 0;
     }
   }
+
+  .product-container {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 0 10px;
+    
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    
+    & > div {
+      scroll-snap-align: start;
+      flex: 0 0 auto;
+      width: 80%;
+      max-width: 300px;
+      margin-right: 1rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .product-container {
+      flex-wrap: nowrap;
+      overflow-x: hidden;
+      
+      & > div {
+        width: 25%;
+        margin-right: 0;
+      }
+    }
+  }
 `;
 
 const StyledCartModal = styled(Modal)`
@@ -375,7 +409,7 @@ const Maalai = () => {
   };
 
   const renderProductCard = (product) => (
-    <div key={product.id} className="col-10 col-sm-6 col-md-4 col-lg-3 flex-shrink-0 px-2">
+    <div key={product.id} className="flex-shrink-0 px-2" style={{ width: '80%', maxWidth: '300px' }}>
       <Card className="h-100 border-0 shadow-sm">
         <div className="position-relative" style={{ paddingTop: '100%' }}>
           <Card.Img
@@ -415,7 +449,7 @@ const Maalai = () => {
   const scrollProducts = (ref, direction) => {
     const container = ref.current;
     if (container) {
-      const scrollAmount = container.clientWidth;
+      const scrollAmount = container.clientWidth * 0.8; // 80% of container width
       if (direction === 'left') {
         container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
       } else {
@@ -427,13 +461,13 @@ const Maalai = () => {
   const renderScrollButtons = (ref) => (
     <>
       <button
-        className="scroll-button left"
+        className="scroll-button left d-none d-md-flex"
         onClick={() => scrollProducts(ref, 'left')}
       >
         <ChevronLeft size={24} color="#333" />
       </button>
       <button
-        className="scroll-button right"
+        className="scroll-button right d-none d-md-flex"
         onClick={() => scrollProducts(ref, 'right')}
       >
         <ChevronRight size={24} color="#333" />
@@ -466,9 +500,8 @@ const Maalai = () => {
                   <div className="position-relative">
                     {renderScrollButtons(categoryRefs.current[category])}
                     <div
-                      className="d-flex flex-nowrap overflow-hidden"
+                      className="product-container"
                       ref={categoryRefs.current[category]}
-                      style={{ margin: '0 -10px' }}
                     >
                       {categoryProducts.map(renderProductCard)}
                     </div>

@@ -501,19 +501,29 @@ const Home = () => {
           </Link>
           </Col>
           <Col xs={12} sm={6} md={4} lg={2} className="mb-3">
-            <img className='img-fluid w-100' src={Rudhraksha} alt="Rudhraksha" />
+         <Link to="/rudh" >
+         <img className='img-fluid w-100' src={Rudhraksha} alt="Rudhraksha" />
+         </Link>
           </Col>
           <Col xs={12} sm={6} md={4} lg={2} className="mb-3">
+            <Link to="/karungali" >
             <img className='img-fluid w-100' src={Karungali} alt="Karungali" />
+            </Link>
           </Col>
           <Col xs={12} sm={6} md={4} lg={2} className="mb-3">
-            <img className='img-fluid w-100' src={Statues} alt="Statues" />
+           <Link to="/statues" >
+           <img className='img-fluid w-100' src={Statues} alt="Statues" />
+           </Link>
           </Col>
           <Col xs={12} sm={6} md={4} lg={2} className="mb-3">
-            <img className='img-fluid w-100' src={PureSilver} alt="Pure Silver" />
+           <Link to="/puresilver" >
+           <img className='img-fluid w-100' src={PureSilver} alt="Pure Silver" />
+           </Link>
           </Col>
           <Col xs={12} sm={6} md={4} lg={2} className="mb-3">
-            <img className='img-fluid w-100' src={Maalai} alt="Maalai" />
+        <Link to="/maalai" >
+        <img className='img-fluid w-100' src={Maalai} alt="Maalai" />
+        </Link>
           </Col>
         </Row>
       </Container>
