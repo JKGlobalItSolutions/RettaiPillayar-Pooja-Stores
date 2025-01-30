@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Form, Button, InputGroup, Row, Col } from 'react-bootstrap';
 import { FaShoppingCart, FaHeart, FaSearch, FaChevronDown } from 'react-icons/fa';
 import styled from 'styled-components';
-import logo from '../../Images/Logo/Rettai Pillayar logo.png';
+import logo from '../../Images/Logo/Frame 11 (1).png';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../firebase/firebase';
 
 const StyledHeader = styled.header`
   .welcome-banner {
@@ -248,13 +250,32 @@ const StyledHeader = styled.header`
   }
 `;
 
-const Header = () => {
+const Header = ({ onSearch }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const productsCollection = collection(db, 'products');
+        const productsSnapshot = await getDocs(productsCollection);
+        const productsList = productsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setFilteredProducts(productsList);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log('Searching for:', searchTerm);
+    onSearch(searchTerm);
   };
 
   const toggleProductsDropdown = (e) => {
@@ -273,20 +294,16 @@ const Header = () => {
           <Row className="w-100 align-items-center g-3">
             <Col xs={12} lg={3} className="text-center text-lg-start">
               <Navbar.Brand href="/" className="d-flex align-items-center justify-content-center justify-content-lg-start">
-                <img
+             <div className="">
+             <img
                   src={logo}
                   alt="Shree Rettai Pillaiyar Logo"
                   className="d-inline-block me-2 logo-image"
                 />
-                <div>
-                  <h1 className="store-name">
-                    SHREE RETTAI PILLAIYAR
-                  </h1>
-                  <h2 className="store-subname">
-                    POOJA STORES
-                  </h2>
-                </div>
+             </div>
+              
               </Navbar.Brand>
+              
             </Col>
 
             <Col xs={12} lg={6}>
@@ -297,7 +314,10 @@ const Header = () => {
                     placeholder="Search Products & Categories"
                     className="search-input rounded-start-pill"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      onSearch(e.target.value);
+                    }}
                   />
                   <Button 
                     variant="danger" 
@@ -312,15 +332,6 @@ const Header = () => {
 
             <Col xs={12} lg={3} className="d-none d-lg-block">
               <div className="d-flex align-items-center justify-content-end gap-4">
-                {/* <Nav.Link href="/cart" className="p-0">
-                  <div className="cart-icon-wrapper">
-                    <FaShoppingCart className='text-danger me-lg-2  ' />
-                    <span className="cart-badge">0</span>
-                  </div>
-                </Nav.Link>
-                <Nav.Link href="/wishlist" className="p-0">
-                  <FaHeart className="desktop-heart-icon" size={24} />
-                </Nav.Link> */}
                 <Button 
                   variant="danger" 
                   href='/login'
@@ -344,15 +355,6 @@ const Header = () => {
               className="border-0 text-white"
             />
             <div className="mobile-actions ms-auto">
-              {/* <Nav.Link href="/cart" className="p-0">
-                <div className="cart-icon-wrapper">
-                  <FaShoppingCart className="mobile-action-icon text-white" />
-                  <span className="cart-badge">0</span>
-                </div>
-              </Nav.Link>
-              <Nav.Link href="/wishlist" className="p-0">
-                <FaHeart className="mobile-action-icon" />
-              </Nav.Link> */}
               <Button 
                 variant="outline-light" 
                 size="sm"
@@ -406,4 +408,3 @@ const Header = () => {
 };
 
 export default Header;
-

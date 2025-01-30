@@ -33,7 +33,7 @@ const firebaseConfig = {
   storageBucket: "rettaipillayarpoojastore-c171a.firebasestorage.app",
   messagingSenderId: "754329199351",
   appId: "1:754329199351:web:b8c77671266ab333dc29f2",
-  measurementId: "G-KQTQVQLW02"
+  measurementId: "G-KQTQVQLW02" 
 };
 
 const app = initializeApp(firebaseConfig);

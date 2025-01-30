@@ -243,7 +243,11 @@ const Checkout = () => {
         customerName: formData.fullName,
         email: formData.email,
         phone: formData.phone,
-        address: `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}, ${formData.country}`,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        country: formData.country,
         productName: product.name,
         price: product.price,
         originalPrice: product.originalPrice,
@@ -254,9 +258,9 @@ const Checkout = () => {
 
       const docRef = await addDoc(collection(db, 'orders'), orderData);
       console.log('Order added with ID: ', docRef.id);
-
+    
       // Construct WhatsApp message with order details
-      const whatsappNumber = '9894924809'; // Replace with your actual WhatsApp number
+      const whatsappNumber = '7550089938'; // Replace with your actual WhatsApp number
       const message = `
 New Order Details:
 
@@ -269,7 +273,11 @@ Customer Information:
 Name: ${formData.fullName}
 Email: ${formData.email}
 Phone: ${formData.phone}
-Address: ${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}, ${formData.country}
+Address: ${formData.address}
+City: ${formData.city}
+State: ${formData.state}
+Zip Code: ${formData.zipCode}
+Country: ${formData.country}
 
 Additional Notes:
 ${formData.notes || 'None'}

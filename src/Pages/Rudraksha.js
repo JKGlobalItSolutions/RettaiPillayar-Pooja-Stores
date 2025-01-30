@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Image } from 'react-bootstrap';
-import { ChevronLeft, ChevronRight, ShoppingCart, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShoppingCart, X, ZoomIn } from 'lucide-react';
 import { db, storage } from '../firebase/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
@@ -31,6 +31,7 @@ const StyledRudraksha = styled.div`
     border: none;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
+    
 
     &:hover {
       transform: translateY(-5px);
@@ -40,6 +41,7 @@ const StyledRudraksha = styled.div`
   .card-img-top {
     object-fit: cover;
     height: 200px;
+    cursor: pointer;
   }
 
   .card-title {
@@ -108,7 +110,9 @@ const StyledRudraksha = styled.div`
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    
+    gap: 1rem;
+    padding: 1rem 0;
+
     &::-webkit-scrollbar {
       display: none;
     }
@@ -116,9 +120,7 @@ const StyledRudraksha = styled.div`
     & > div {
       scroll-snap-align: start;
       flex: 0 0 auto;
-      width: 80%;
-      max-width: 300px;
-      margin-right: 1rem;
+      width: 250px;
     }
   }
 
@@ -126,6 +128,7 @@ const StyledRudraksha = styled.div`
     .product-container {
       flex-wrap: nowrap;
       overflow-x: hidden;
+      justify-content: flex-start;
       
       & > div {
         width: 25%;
@@ -345,38 +348,165 @@ const StyledCartModal = styled(Modal)`
   }
 `;
 
+const ZoomModal = styled(Modal)`
+  .modal-content {
+    background-color: transparent;
+    border: none;
+  }
+
+  .modal-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+  }
+
+  .zoomed-image-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .zoomed-image {
+    max-width: 80%;
+    max-height: 80vh;
+    object-fit: contain;
+  }
+
+  .close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.7);
+    border: none;
+    color: #333;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    z-index: 1050;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .zoomed-image {
+      max-width: 90%;
+      max-height: 90vh;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .zoomed-image {
+      max-width: 95%;
+      max-height: 95vh;
+    }
+
+    .close-button {
+      top: 5px;
+      right: 5px;
+      font-size: 20px;
+      width: 30px;
+      height: 30px;
+    }
+  }
+`;
+
+const ImageNavButton = styled(Button)`
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.7);
+  border: none;
+  color: #333;
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  z-index: 10;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+  }
+
+  &.prev {
+    left: 5px;
+  }
+
+  &.next {
+    right: 5px;
+  }
+`;
+
 const Rudraksha = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [showContent, setShowContent] = useState(false);
   const [showCartModal, setShowCartModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showZoomModal, setShowZoomModal] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState('');
   const categoryRefs = useRef({});
+  const [currentImageIndex, setCurrentImageIndex] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    if (searchTerm) {
+      const filtered = products.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts(products);
+    }
+  }, [searchTerm, products]);
+
   const fetchProducts = async () => {
     try {
       const productsCollection = collection(db, 'products');
       const q = query(productsCollection, where("page", "==", "Rudraksha"));
       const productsSnapshot = await getDocs(q);
-      
+    
       if (!productsSnapshot.empty) {
         setShowContent(true);
-        const productsList = await Promise.all(productsSnapshot.docs.map(async (doc) => {
+        const productsList = productsSnapshot.docs.map((doc) => {
           const productData = doc.data();
-          const imageUrl = await getDownloadURL(ref(storage, productData.image));
           return {
             id: doc.id,
             ...productData,
-            image: imageUrl,
+            images: productData.images || [],
           };
-        }));
+        });
         setProducts(productsList);
+        setFilteredProducts(productsList);
+        
+        const initialImageIndices = {};
+        productsList.forEach(product => {
+          initialImageIndices[product.id] = 0;
+        });
+        setCurrentImageIndex(initialImageIndices);
       } else {
         setShowContent(false);
       }
@@ -407,43 +537,115 @@ const Rudraksha = () => {
     setShowCartModal(true);
   };
 
-  const renderProductCard = (product) => (
-    <div key={product.id} className="flex-shrink-0">
-      <Card className="h-100 border-0 shadow-sm">
-        <div className="position-relative" style={{ paddingTop: '100%' }}>
-          <Card.Img
-            variant="top"
-            src={product.image}
-            alt={product.name}
-            className="position-absolute top-0 start-0 w-100 h-100"
-            style={{ objectFit: 'cover' }}
-          />
-        </div>
-        <Card.Body className="text-center">
-          <Card.Title className="fs-5 mb-3">{product.name}</Card.Title>
-          <div className="d-flex justify-content-center align-items-center gap-2 mb-3">
-            <span className="fs-5 fw-bold px-2" style={{ color: '#000', backgroundColor: "#FFE31A" }}>
-              ₹{product.price.toFixed(2)}
-            </span>
-            <span className="text-decoration-line-through text-muted">
-              ₹{product.originalPrice.toFixed(2)}
-            </span>
+  const handleImageClick = (imageUrl) => {
+    setZoomedImage(imageUrl);
+    setShowZoomModal(true);
+  };
+
+  const handlePrevImage = (productId) => {
+    setCurrentImageIndex((prev) => ({
+      ...prev,
+      [productId]: (prev[productId] - 1 + products.find(p => p.id === productId).images.length) % products.find(p => p.id === productId).images.length
+    }));
+  };
+
+  const handleNextImage = (productId) => {
+    setCurrentImageIndex((prev) => ({
+      ...prev,
+      [productId]: (prev[productId] + 1) % products.find(p => p.id === productId).images.length
+    }));
+  };
+
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+  };
+
+  const renderProductCard = (product) => {
+    const currentIndex = currentImageIndex[product.id] || 0;
+
+    return (
+      <div key={product.id} className="flex-shrink-0 mb-4">
+        <Card className="h-100 border-0 shadow-sm" style={{ width: '250px' }}>
+          <div className="position-relative" style={{ paddingTop: '100%' }}>
+            <div className="position-absolute top-0 start-0 w-100 h-100 d-flex">
+              {product.images && product.images.length > 0 ? (
+                <Card.Img
+                  variant="top"
+                  src={product.images[currentIndex]}
+                  alt={`${product.name} - ${currentIndex + 1}`}
+                  className="w-100 h-100"
+                  style={{ objectFit: 'cover' }}
+                  onClick={() => handleImageClick(product.images[currentIndex])}
+                />
+              ) : (
+                <Card.Img
+                  variant="top"
+                  src="/placeholder.svg"
+                  alt={product.name}
+                  className="w-100 h-100"
+                  style={{ objectFit: 'cover' }}
+                />
+              )}
+            </div>
+            {product.images && product.images.length > 1 && (
+              <>
+                <ImageNavButton
+                  className="prev"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePrevImage(product.id);
+                  }}
+                >
+                  &lt;
+                </ImageNavButton>
+                <ImageNavButton
+                  className="next"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNextImage(product.id);
+                  }}
+                >
+                  &gt;
+                </ImageNavButton>
+              </>
+            )}
+            <Button 
+              className="position-absolute top-0 end-0 m-2 p-1 bg-white rounded-circle"
+              style={{ width: '30px', height: '30px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+              onClick={() => handleImageClick(product.images && product.images.length > 0 ? product.images[currentIndex] : '/placeholder.svg')}
+              variant="light"
+            >
+              <ZoomIn size={20} />
+            </Button>
           </div>
-          <Button 
-            variant="danger" 
-            className="w-100"
-            style={{ 
-              backgroundColor: '#FF0000',
-              borderColor: '#FF0000'
-            }}
-            onClick={() => handleAddToCart(product)}
-          >
-            Add to Cart
-          </Button>
-        </Card.Body>
-      </Card>
-    </div>
-  );
+          <Card.Body className="text-center d-flex flex-column justify-content-between">
+            <div>
+              <Card.Title className="fs-5 mb-3">{product.name}</Card.Title>
+              <div className="d-flex justify-content-center align-items-center gap-2 mb-3">
+                <span className="fs-5 fw-bold px-2" style={{ color: '#000', backgroundColor: "#FFE31A" }}>
+                  ₹{product.price.toFixed(2)}
+                </span>
+                <span className="text-decoration-line-through text-muted">
+                  ₹{product.originalPrice.toFixed(2)}
+                </span>
+              </div>
+            </div>
+            <Button 
+              variant="danger" 
+              className="w-100"
+              style={{ 
+                backgroundColor: '#FF0000',
+                borderColor: '#FF0000'
+              }}
+              onClick={() => handleAddToCart(product)}
+            >
+              Add to Cart
+            </Button>
+          </Card.Body>
+        </Card>
+      </div>
+    );
+  };
 
   const scrollProducts = (ref, direction) => {
     const container = ref.current;
@@ -463,13 +665,13 @@ const Rudraksha = () => {
         className="scroll-button left d-none d-md-flex"
         onClick={() => scrollProducts(ref, 'left')}
       >
-        <ChevronLeft size={24} color="#333" />
+        &lt;
       </button>
       <button
         className="scroll-button right d-none d-md-flex"
         onClick={() => scrollProducts(ref, 'right')}
       >
-        <ChevronRight size={24} color="#333" />
+        &gt;
       </button>
     </>
   );
@@ -481,7 +683,7 @@ const Rudraksha = () => {
 
   return (
     <div>
-      <Header />
+      <Header onSearch={handleSearch} />
       <div className="">
         <img className='img-fluid' src={banner} alt="" />
       </div>
@@ -490,7 +692,7 @@ const Rudraksha = () => {
           <Container>
             <h1>Rudraksha</h1>
             {categories.map((category) => {
-              const categoryProducts = products.filter(product => product.category === category);
+              const categoryProducts = filteredProducts.filter(product => product.category === category);
               if (categoryProducts.length === 0) return null;
 
               return (
@@ -531,7 +733,7 @@ const Rudraksha = () => {
           {selectedProduct && (
             <>
               <div className="text-center">
-                <Image src={selectedProduct.image} alt={selectedProduct.name} className="product-image" />
+                <Image src={selectedProduct.images[0]} alt={selectedProduct.name} className="product-image" />
               </div>
               <h2 className="product-title">{selectedProduct.name}</h2>
               <div className="price-display">
@@ -568,6 +770,22 @@ const Rudraksha = () => {
           )}
         </Modal.Body>
       </StyledCartModal>
+
+      <ZoomModal
+        show={showZoomModal}
+        onHide={() => setShowZoomModal(false)}
+        centered
+        size="xl"
+      >
+        <Modal.Body>
+          <div className="zoomed-image-container">
+            <img src={zoomedImage} alt="Zoomed product" className="zoomed-image" />
+            <button className="close-button" onClick={() => setShowZoomModal(false)}>
+              <X size={24} />
+            </button>
+          </div>
+        </Modal.Body>
+      </ZoomModal>
 
       <Footer />
     </div>

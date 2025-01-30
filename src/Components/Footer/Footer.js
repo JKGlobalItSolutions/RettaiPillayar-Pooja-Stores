@@ -58,12 +58,14 @@ const Footer = () => {
               <li className="d-flex mb-3 justify-content-center justify-content-md-start">
                 <Mail className="flex-shrink-0 me-2" size={20} />
                 <a href="mailto:anbutum1@gmail.com" className="text-secondary text-decoration-none">
-                  anbutum1@gmail.com
+                rettaipillayarpoojastores@gmail.com
                 </a>
               </li>
               <li className="d-flex mb-3 justify-content-center justify-content-md-start">
                 <Phone className="flex-shrink-0 me-2" size={20} />
-                <span>9443164102 / 6383002749</span>
+                <span> 7550089938
+                / 9443164102
+                </span>
               </li>
             </ul>
             <div className="d-flex justify-content-center justify-content-md-start">

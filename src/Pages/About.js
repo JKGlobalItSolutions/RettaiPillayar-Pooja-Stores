@@ -142,7 +142,7 @@ const About = () => {
         <p><span style={{color:"red"}}>Fair Pricing:</span> We believe in delivering high-quality products at reasonable prices, ensuring value for every purchase.</p>
       </div>
       <div className="container my-5 ">
-        <ImageCarousel />
+        {/* <ImageCarousel /> */}
       </div>
       <Footer/>
     </div>

@@ -27,6 +27,7 @@ const StyledOrders = styled.div`
     background-color: #A41E19;
     color: white;
     font-weight: bold;
+    min-width: 301px;
   }
 
   .table td {
@@ -108,7 +109,7 @@ const Orders = () => {
           id: doc.id,
           ...doc.data()
         }));
-        setOrders(ordersList);
+        setOrders(ordersList.sort((a, b) => b.date.toDate() - a.date.toDate()));
       } catch (error) {
         console.error('Error fetching orders:', error);
         toast.error('Failed to fetch orders');
@@ -141,6 +142,8 @@ const Orders = () => {
   const filteredOrders = orders.filter(order =>
     order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.productName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -177,13 +180,18 @@ const Orders = () => {
               <Table striped bordered hover>
                 <thead>
                   <tr>
-                    <th>Order ID</th>
-                    <th>Customer Name</th>
-                    <th>Product</th>
-                    <th>Price</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th style={{ minWidth: '301px' }}>Order ID</th>
+                    <th style={{ minWidth: '301px' }}>Customer Name</th>
+                    <th style={{ minWidth: '301px' }}>Email</th>
+                    <th style={{ minWidth: '301px' }}>Phone</th>
+                    <th style={{ minWidth: '301px' }}>Address</th>
+                    <th style={{ minWidth: '301px' }}>Product</th>
+                    <th style={{ minWidth: '301px' }}>Price</th>
+                    <th style={{ minWidth: '301px' }}>Original Price</th>
+                    <th style={{ minWidth: '301px' }}>Date</th>
+                    <th style={{ minWidth: '301px' }}>Status</th>
+                    <th style={{ minWidth: '301px' }}>Notes</th>
+                    <th style={{ minWidth: '301px' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -191,10 +199,15 @@ const Orders = () => {
                     <tr key={order.id}>
                       <td>{order.id}</td>
                       <td>{order.customerName}</td>
+                      <td>{order.email}</td>
+                      <td>{order.phone}</td>
+                      <td>{`${order.address}, ${order.city}, ${order.state} ${order.zipCode}, ${order.country}`}</td>
                       <td>{order.productName}</td>
                       <td>₹{order.price.toFixed(2)}</td>
+                      <td>₹{order.originalPrice.toFixed(2)}</td>
                       <td>{new Date(order.date.toDate()).toLocaleString()}</td>
                       <td>{order.status}</td>
+                      <td>{order.notes || 'N/A'}</td>
                       <td>
                         <Form.Select
                           className="status-select"
